@@ -60,3 +60,4 @@ jobs:
           app-name: 'silal-oday-test-app'
           slot-name: 'Production'
           package: dist  # deploy built files
+
