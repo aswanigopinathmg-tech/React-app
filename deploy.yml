@@ -3,37 +3,32 @@ name: Build and deploy React (Vite) app to Azure Web App - silal-oday-test-app
 
 on:
   push:
-    branches: [ main ]
+    branches:
+      - main
   workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
+      - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Use Node.js 22
+      - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
           node-version: '22.x'
 
-      - name: Install deps and build
+      - name: Install dependencies and build
         run: |
           npm install
           npm run build
 
-      # Zip the *contents* of dist (not the dist folder itself)
-      - name: Create deployment archive
-        run: |
-          cd dist
-          zip -r ../site.zip ./*
-
-      - name: Upload artifact
+      - name: Upload build artifact
         uses: actions/upload-artifact@v4
         with:
-          name: site-zip
-          path: site.zip
+          name: build-dist
+          path: dist   # <— upload only the built files
 
   deploy:
     runs-on: ubuntu-latest
@@ -41,14 +36,15 @@ jobs:
     permissions:
       id-token: write
       contents: read
+
     steps:
       - name: Download artifact
         uses: actions/download-artifact@v4
         with:
-          name: site-zip
+          name: build-dist
           path: .
 
-      - name: Azure login
+      - name: Login to Azure
         uses: azure/login@v2
         with:
           client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_3AA329B5225B4F0A8403BAB02E97DC05 }}
@@ -60,4 +56,4 @@ jobs:
         with:
           app-name: 'silal-oday-test-app'
           slot-name: 'Production'
-          package: site.zip   # << deploys the zip whose root is your built files
+          package: .  # deploy only the dist files now sitting at root
