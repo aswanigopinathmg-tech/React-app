@@ -1,40 +1,58 @@
-name: Deploy Vite site to GitHub Pages
+name: Build and deploy React (Vite) app to Azure Web App - silal-oday-test-app
 
 on:
   push:
-    branches: [ main ]
+    branches:
+      - main
   workflow_dispatch:
-
-permissions:
-  contents: read
-  pages: write
-  id-token: write
-
-concurrency:
-  group: "pages"
-  cancel-in-progress: true
 
 jobs:
   build:
     runs-on: ubuntu-latest
+
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
         with:
-          node-version: 20
-          #cache: npm
-      - run: npm install
-      - run: npm run build
-      - uses: actions/upload-pages-artifact@v4
+          node-version: '22.x'
+
+      - name: Install dependencies and build
+        run: |
+          npm install
+          npm run build
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
         with:
-          path: ./dist
+          name: build-dist
+          path: dist   # upload only built files
 
   deploy:
     runs-on: ubuntu-latest
     needs: build
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+    permissions:
+      id-token: write
+      contents: read
+
     steps:
-      - id: deployment
-        uses: actions/deploy-pages@v4
+      - name: Download artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: build-dist
+          path: dist
+
+      - name: Login to Azure
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_3AA329B5225B4F0A8403BAB02E97DC05 }}
+          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_DF3696114F4349DAAFEDD1F5E98E240C }}
+          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_06791DB2E6BD4FABB945446F21272C99 }}
+
+      - name: Deploy to Azure Web App
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: 'silal-oday-test-app'
+          slot-name: 'Production'
+          package: dist   # deploy built files
