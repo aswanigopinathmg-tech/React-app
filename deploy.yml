@@ -28,7 +28,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: build-dist
-          path: dist  # only the built files
+          path: dist  # only built files
 
   deploy:
     runs-on: ubuntu-latest
@@ -42,7 +42,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: build-dist
-          path: dist
+          path: dist  # download into dist folder
 
       - name: Login to Azure
         uses: azure/login@v2
@@ -50,14 +50,6 @@ jobs:
           client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_3AA329B5225B4F0A8403BAB02E97DC05 }}
           tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_DF3696114F4349DAAFEDD1F5E98E240C }}
           subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_06791DB2E6BD4FABB945446F21272C99 }}
-
-      - name: Clear existing wwwroot (optional but recommended)
-        run: |
-          echo "Clearing old wwwroot content"
-          az webapp deployment source config-zip \
-            --resource-group silal-safco-apps-rg \
-            --name silal-oday-test-app \
-            --src /dev/null || true
 
       - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v3
