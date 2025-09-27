@@ -28,7 +28,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: build-dist
-          path: dist   # only upload built files
+          path: dist   # upload ONLY dist folder
 
   deploy:
     runs-on: ubuntu-latest
@@ -56,4 +56,4 @@ jobs:
         with:
           app-name: 'silal-oday-test-app'
           slot-name: 'Production'
-          package: dist   # deploy built files only
+          package: dist  # deploy the dist folder only
