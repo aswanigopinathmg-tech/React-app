@@ -1,4 +1,4 @@
-name: Build and deploy React (Vite) app to Azure Web App - silal-oday-test-app
+name: Build and Zip Deploy React (Vite) app to Azure Web App - silal-oday-test-app
 
 on:
   push:
@@ -24,11 +24,17 @@ jobs:
           npm install
           npm run build
 
-      - name: Upload build artifact
+      - name: Create zip of build output
+        run: |
+          cd dist
+          zip -r ../reactapp_build.zip .
+        shell: bash
+
+      - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: build-dist
-          path: dist  # upload only the built files
+          name: reactapp-zip
+          path: reactapp_build.zip
 
   deploy:
     runs-on: ubuntu-latest
@@ -41,8 +47,8 @@ jobs:
       - name: Download artifact
         uses: actions/download-artifact@v4
         with:
-          name: build-dist
-          path: dist
+          name: reactapp-zip
+          path: .
 
       - name: Login to Azure
         uses: azure/login@v2
@@ -51,9 +57,10 @@ jobs:
           tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_DF3696114F4349DAAFEDD1F5E98E240C }}
           subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_06791DB2E6BD4FABB945446F21272C99 }}
 
-      - name: Deploy to Azure Web App
+      - name: Deploy zipped artifact to Azure Web App
         uses: azure/webapps-deploy@v3
         with:
           app-name: 'silal-oday-test-app'
           slot-name: 'Production'
-          package: dist  # deploy built files only
+          package: reactapp_build.zip
+          startup-command: 'pm2 serve /home/site/wwwroot --spa'
