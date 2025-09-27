@@ -1,3 +1,6 @@
+# .github/workflows/azure-webapps-deploy.yml
+# Build and deploy a Vite/React app to Azure Web App
+
 name: Build and deploy React (Vite) app to Azure Web App - silal-oday-test-app
 
 on:
@@ -11,7 +14,8 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
 
       - name: Set up Node.js
         uses: actions/setup-node@v3
@@ -20,14 +24,14 @@ jobs:
 
       - name: Install dependencies and build
         run: |
-          npm install
-          npm run build
+          npm install        # install all dependencies
+          npm run build      # create production build (in /dist)
 
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
         with:
           name: build-dist
-          path: dist   # upload only built files
+          path: dist  # upload only the built files
 
   deploy:
     runs-on: ubuntu-latest
@@ -55,4 +59,4 @@ jobs:
         with:
           app-name: 'silal-oday-test-app'
           slot-name: 'Production'
-          package: dist   # deploy built files
+          package: dist  # deploy ONLY the built files
