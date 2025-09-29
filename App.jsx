@@ -6,7 +6,7 @@ import {
 import { Home, ArrowLeft, BarChart3, ChevronRight, X as XIcon } from "lucide-react";
 import Papa from "papaparse";
 
-const DEFAULT_CSV_PATH = '/sku_data.csv';
+const DEFAULT_CSV_PATH = `${import.meta.env.BASE_URL}data/sku_data.csv`;
 
 const normKey = (k) => String(k || "").toLowerCase().replace(/\s+|-/g, "_");
 
@@ -49,7 +49,24 @@ const METRIC_ALIASES = {
   "No of Transactions": ["no of transactions", "no_of_transactions", "nooftransactions", "transactions"]
 };
 
+/* ===== MOBILE-ONLY UTIL ===== */
+function useIsMobile(breakpoint = 640) {
+  const [isMobile, setIsMobile] = useState(
+    typeof window !== "undefined" ? window.innerWidth < breakpoint : false
+  );
+  useEffect(() => {
+    const onResize = () => setIsMobile(window.innerWidth < breakpoint);
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, [breakpoint]);
+  return isMobile;
+}
+const shortLabel = (s) =>
+  typeof s === "string" && s.length > 12 ? s.slice(0, 12) + "…" : s;
+
 function SKUDashboard() {
+  const isMobile = useIsMobile();
+
   const [rows, setRows] = useState([]);
   const [drillPath, setDrillPath] = useState([]); // [category, sub_category]
   const [availableMetrics, setAvailableMetrics] = useState([]);
@@ -243,6 +260,14 @@ function SKUDashboard() {
       }));
   }, [rows, drillPath, selectedLeaf]);
 
+  /* ===== MOBILE-ONLY PROPS (no desktop change) ===== */
+  const chartMargin = isMobile
+    ? { top: 24, right: 24, left: 8, bottom: 64 }
+    : { top: 24, right: 32, left: 8, bottom: 32 };
+  const xTick = { fontSize: isMobile ? 10 : 12 };
+  const yTick = { fontSize: isMobile ? 10 : 12 };
+  const xAxisMobileProps = isMobile ? { angle: -45, textAnchor: "end", height: 72 } : {};
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
@@ -287,19 +312,31 @@ function SKUDashboard() {
 
       {/* Chart card */}
       <div className="px-8">
-        <div className="w-full h-[520px] bg-white rounded-2xl p-6 shadow-sm border">
+        <div className="w-full bg-white rounded-2xl p-6 shadow-sm border" style={{ height: isMobile ? 400 : 520 }}>
           {isLoading && <p className="text-sm text-gray-500">Loading…</p>}
           {error && <p className="text-sm text-red-600">{error}</p>}
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={colorized} margin={{ top: 24, right: 32, left: 8, bottom: 32 }}>
+            <BarChart data={colorized} margin={chartMargin}>
               <CartesianGrid strokeDasharray="3 3" vertical={false} />
-              <XAxis dataKey="name" tickLine={false} axisLine={false} tick={{ fontSize: 12 }} interval={0} />
-              <YAxis tickLine={false} axisLine={false} tick={{ fontSize: 12 }} />
+              <XAxis
+                dataKey="name"
+                tickLine={false}
+                axisLine={false}
+                interval={0}
+                tick={xTick}
+                tickFormatter={isMobile ? shortLabel : undefined}
+                {...xAxisMobileProps}
+              />
+              <YAxis tickLine={false} axisLine={false} tick={yTick} />
               <Tooltip content={renderTooltip} />
               <Bar dataKey={selectedMetric} onClick={onBarClick}>
-                <LabelList dataKey="__label" position="top" style={{ fontSize: 12, fontWeight: 600 }} />
+                <LabelList
+                  dataKey="__label"
+                  position="top"
+                  style={{ fontSize: isMobile ? 10 : 12, fontWeight: 600 }}
+                />
                 {colorized.map((d, i) => (
-                  <Cell key={i} fill={d.__color} cursor={drillPath.length < 2 ? "pointer" : "pointer"} />
+                  <Cell key={i} fill={d.__color} cursor="pointer" />
                 ))}
               </Bar>
             </BarChart>
