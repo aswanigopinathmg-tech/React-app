@@ -23,6 +23,8 @@ jobs:
         run: |
           npm install
           npm run build
+          cp sku_data.csv dist/
+          cp test.txt dist/
 
       - name: Prepare deploy package (dist + web.config)
         run: |
@@ -65,3 +67,4 @@ jobs:
           app-name: 'silal-oday-test-app'
           slot-name: 'Production'
           package: app.zip
+
