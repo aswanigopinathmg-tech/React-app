@@ -6,7 +6,7 @@ import {
 import { Home, ArrowLeft, BarChart3, ChevronRight, X as XIcon } from "lucide-react";
 import Papa from "papaparse";
 
-const DEFAULT_CSV_PATH = `${import.meta.env.BASE_URL}/sku_data.csv`;
+const DEFAULT_CSV_PATH = '/sku_data.csv';
 
 const normKey = (k) => String(k || "").toLowerCase().replace(/\s+|-/g, "_");
 
